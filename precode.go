@@ -47,7 +47,7 @@ var tasks = map[string]Task{
 func getAllTasks(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(tasks)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
@@ -71,6 +71,12 @@ func postTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, ok := tasks[task.ID]
+	if ok {
+		http.Error(w, "Задание с таким ID уже есть", http.StatusConflict)
+		return
+	}
+
 	tasks[task.ID] = task
 
 	w.Header().Set("Content-Type", "application/json")
@@ -82,7 +88,7 @@ func getTasksById(w http.ResponseWriter, r *http.Request) {
 
 	task, ok := tasks[id]
 	if !ok {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "Задания с таким ID нет", http.StatusNotFound)
 		return
 	}
 
@@ -101,7 +107,7 @@ func deleteTasks(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	_, ok := tasks[id]
 	if !ok {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "Задания с таким ID нет", http.StatusNotFound)
 		return
 	}
 
